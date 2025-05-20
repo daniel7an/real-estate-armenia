@@ -58,8 +58,12 @@ export default function Register() {
         // Redirect to dashboard
         router.push('/dashboard')
       }
-    } catch (error: any) {
-      setError(error.message || 'Failed to register. Please try again.')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message || 'Failed to register. Please try again.')
+      } else {
+        setError('Failed to register. Please try again.')
+      }
     } finally {
       setLoading(false)
     }

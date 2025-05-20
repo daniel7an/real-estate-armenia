@@ -102,8 +102,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         return res.status(200).json(data)
-      } catch (error: any) {
-        return res.status(500).json({ error: error.message })
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          return res.status(500).json({ error: error.message })
+        }
+        return res.status(500).json({ error: 'An unknown error occurred' })
       }
 
     case 'POST':
@@ -157,8 +160,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         return res.status(201).json(data)
-      } catch (error: any) {
-        return res.status(500).json({ error: error.message })
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          return res.status(500).json({ error: error.message })
+        }
+        return res.status(500).json({ error: 'An unknown error occurred' })
       }
 
     case 'DELETE':
@@ -176,7 +182,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // First, check if the user is authorized to delete this inquiry
-        // (either they sent it or they own the property it was sent to)
         const { data: inquiryData, error: inquiryError } = await supabase
           .from('inquiries')
           .select(`
@@ -192,7 +197,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           throw inquiryError
         }
 
-        const isAuthorized = inquiryData.sender === userId || inquiryData.property.owner === userId
+        // Check if the property and its owner match the user ID
+        let propertyOwnerId = null
+
+        // Safely access the property owner
+        if (inquiryData && inquiryData.property) {
+          // Use a type assertion with unknown first
+          const property = inquiryData.property as unknown;
+          
+          if (Array.isArray(property) && property.length > 0 && 'owner' in property[0]) {
+            propertyOwnerId = property[0].owner;
+          } else if (typeof property === 'object' && property !== null && 'owner' in (property as object)) {
+            propertyOwnerId = (property as {owner: string}).owner;
+          }
+        }
+
+        const isAuthorized = inquiryData.sender === userId || propertyOwnerId === userId
 
         if (!isAuthorized) {
           return res.status(403).json({ error: 'Forbidden - You are not authorized to delete this inquiry' })
@@ -209,8 +229,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         return res.status(200).json({ success: true })
-      } catch (error: any) {
-        return res.status(500).json({ error: error.message })
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          return res.status(500).json({ error: error.message })
+        }
+        return res.status(500).json({ error: 'An unknown error occurred' })
       }
 
     default:

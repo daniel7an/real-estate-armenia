@@ -43,8 +43,12 @@ export default function Login() {
         // Redirect to dashboard
         router.push('/dashboard')
       }
-    } catch (error: any) {
-      setError(error.message || 'Failed to log in. Please check your credentials and try again.')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message || 'Failed to log in. Please check your credentials and try again.')
+      } else {
+        setError('Failed to log in. Please check your credentials and try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -130,7 +134,7 @@ export default function Login() {
             
             <div className="mt-6 text-center">
               <p className="text-gray-600">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link href="/register" className="text-blue-600 hover:underline">
                   Register
                 </Link>

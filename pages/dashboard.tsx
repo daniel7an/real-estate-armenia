@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { supabase } from '@/lib/supabaseClient'
+import { Session } from '@supabase/supabase-js'
 
 type Property = {
   id: string
@@ -22,7 +23,7 @@ type PropertyFormData = {
 
 export default function Dashboard() {
   const router = useRouter()
-  const [session, setSession] = useState<any>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [properties, setProperties] = useState<Property[]>([])
   const [formData, setFormData] = useState<PropertyFormData>({
@@ -125,8 +126,12 @@ export default function Dashboard() {
       
       // Refresh properties list
       fetchProperties(session.user.id)
-    } catch (error: any) {
-      setFormError(error.message || 'Failed to save property')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setFormError(error.message || 'Failed to save property')
+      } else {
+        setFormError('Failed to save property')
+      }
     }
   }
 
@@ -158,10 +163,16 @@ export default function Dashboard() {
       if (error) throw error
       
       // Refresh properties list
-      fetchProperties(session.user.id)
+      if (session) {
+        fetchProperties(session.user.id)
+      }
       setSuccessMessage('Property deleted successfully')
-    } catch (error: any) {
-      setFormError(error.message || 'Failed to delete property')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setFormError(error.message || 'Failed to delete property')
+      } else {
+        setFormError('Failed to delete property')
+      }
     }
   }
 
@@ -339,7 +350,7 @@ export default function Dashboard() {
           
           {properties.length === 0 ? (
             <div className="bg-white p-6 rounded-lg shadow text-center">
-              <p className="text-gray-600">You haven't added any properties yet.</p>
+              <p className="text-gray-600">You haven&apos;t added any properties yet.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -39,28 +39,51 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         const { id, ownerId } = req.query
 
-        let query = supabase.from('properties').select('*')
-
         if (id) {
           // Get a single property by ID
-          query = query.eq('id', id).single()
+          const { data, error } = await supabase
+            .from('properties')
+            .select('*')
+            .eq('id', id)
+            .single()
+
+          if (error) {
+            throw error
+          }
+
+          return res.status(200).json(data)
         } else if (ownerId) {
           // Get properties for a specific owner
-          query = query.eq('owner', ownerId).order('created_at', { ascending: false })
+          const { data, error } = await supabase
+            .from('properties')
+            .select('*')
+            .eq('owner', ownerId)
+            .order('created_at', { ascending: false })
+
+          if (error) {
+            throw error
+          }
+
+          return res.status(200).json(data)
         } else {
           // Get all properties (perhaps limit or add pagination)
-          query = query.order('created_at', { ascending: false }).limit(20)
+          const { data, error } = await supabase
+            .from('properties')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(20)
+
+          if (error) {
+            throw error
+          }
+
+          return res.status(200).json(data)
         }
-
-        const { data, error } = await query
-
-        if (error) {
-          throw error
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          return res.status(500).json({ error: error.message })
         }
-
-        return res.status(200).json(data)
-      } catch (error: any) {
-        return res.status(500).json({ error: error.message })
+        return res.status(500).json({ error: 'An unknown error occurred' })
       }
 
     case 'POST':
@@ -96,8 +119,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         return res.status(201).json(data)
-      } catch (error: any) {
-        return res.status(500).json({ error: error.message })
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          return res.status(500).json({ error: error.message })
+        }
+        return res.status(500).json({ error: 'An unknown error occurred' })
       }
 
     case 'PUT':
@@ -149,8 +175,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         return res.status(200).json(data)
-      } catch (error: any) {
-        return res.status(500).json({ error: error.message })
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          return res.status(500).json({ error: error.message })
+        }
+        return res.status(500).json({ error: 'An unknown error occurred' })
       }
 
     case 'DELETE':
@@ -193,8 +222,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         return res.status(200).json({ success: true })
-      } catch (error: any) {
-        return res.status(500).json({ error: error.message })
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          return res.status(500).json({ error: error.message })
+        }
+        return res.status(500).json({ error: 'An unknown error occurred' })
       }
 
     default:

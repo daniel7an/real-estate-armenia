@@ -35,7 +35,7 @@ export default function PropertyDetails({ property }: Props) {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Property Not Found</h1>
-          <p className="text-gray-600 mb-6">The property you are looking for doesn't exist or has been removed.</p>
+          <p className="text-gray-600 mb-6">The property you are looking for doesn&apos;t exist or has been removed.</p>
           <Link href="/" className="inline-block bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
             Return to Home
           </Link>
@@ -80,8 +80,12 @@ export default function PropertyDetails({ property }: Props) {
 
       setSuccess(true)
       setInquiry({ message: '' })
-    } catch (error: any) {
-      setError(error.message || 'Failed to send inquiry. Please try again.')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message || 'Failed to send inquiry. Please try again.')
+      } else {
+        setError('Failed to send inquiry. Please try again.')
+      }
     } finally {
       setSubmitting(false)
     }
